@@ -1,0 +1,87 @@
+version: '3'
+services:
+
+  mainapp:
+    build:
+      dockerfile: api/Dockerfile
+    ports:
+      - 3333:3333
+    restart: unless-stopped
+    command: ["go", "run", "api/main.go"]
+    environment:
+      - PORT=3333
+      - PATH_LOG=YOUR INFORMATION
+    volumes:
+      - myapp:/home/
+    networks:
+      - mynet
+    depends_on:
+      - postgres
+
+
+  validator:
+    build:
+      dockerfile: validator/Dockerfile
+    ports:
+      - 3334:3334
+    restart: unless-stopped  
+    command: ["go", "run", "validator/validation.go"]
+    volumes:
+      - myapp:/home/
+    environment:
+      - PORT=3334
+      - PATH_LOG=YOUR INFORMATION
+    networks:
+      - mynet
+    depends_on:
+      - postgres
+  
+  db:
+    build:
+      dockerfile: db/Dockerfile
+    ports:
+      - 3335:3335
+    restart: unless-stopped  
+    command: ["go", "run", "db/database.go"]
+    volumes:
+      - myapp:/home/
+    environment:
+      - PORT=3335
+      - POSTGRES_USER=YOUR INFORMATION
+      - POSTGRES_PASSWORD=YOUR INFORMATION
+      - POSTGRES_DB=YOUR INFORMATION
+      - PATH_LOG=YOUR INFORMATION
+    networks:
+      - mynet
+    depends_on:
+      - postgres
+  
+  web:
+    build: 
+      dockerfile: web/Dockerfile
+    ports:
+      - 3336:3336
+    restart: unless-stopped
+    command: python web/manage.py runserver 0.0.0.0:3336
+    networks:
+      - mynet
+    depends_on:
+      - postgres
+  
+  postgres:
+    image: postgres:alpine
+    environment:
+      POSTGRES_USER: YOUR INFORMATION
+      POSTGRES_PASSWORD: YOUR INFORMATION
+      POSTGRES_DB: YOUR INFORMATION
+    ports:
+      - "5432:5432"
+    networks:
+      - mynet
+
+volumes:
+  myapp:
+
+networks:
+  mynet:
+    driver: bridge
