@@ -32,7 +32,7 @@ func AlgLynh(number string) (bool, string) {
 	for i := 0; i < len(number); i++ {
 		num, err := strconv.Atoi(string(number[i]))
 		if err != nil {
-			return false, "Incorrect card number"
+			return false, "Incorrect value in the card number"
 		}
 		numslist = append(numslist, num)
 	}
@@ -40,6 +40,6 @@ func AlgLynh(number string) (bool, string) {
 	if res {
 		return true, "Valid success"
 	} else {
-		return false, "Bad card number"
+		return false, "Wrong card number"
 	}
 }

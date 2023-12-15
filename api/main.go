@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -56,7 +57,7 @@ func web(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(body))
 }
 
-func get_info(w http.ResponseWriter, r *http.Request) {
+func webHandler(w http.ResponseWriter, r *http.Request) {
 	card_number := r.URL.Query().Get("bank_number")
 	data := make(map[string]string)
 	data["number"] = card_number
@@ -105,12 +106,22 @@ func get_info(w http.ResponseWriter, r *http.Request) {
 		}
 		// SAVING IN DB
 		resp := Validation{Valid: res, Errors: ers}
+		fmt.Println(resp)
 		jsondata, err := json.Marshal(resp)
 		if err != nil {
 			ErrorLogger.Println(err)
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsondata)
+		clin := http.Client{}
+		fmt.Println(jsondata)
+		reqs, err := clin.Post("http://host.docker.internal:3336", "application/json", bytes.NewBuffer(jsondata))
+		if err != nil {
+			ErrorLogger.Println(err)
+		}
+		defer reqs.Body.Close()
+		body, _ = io.ReadAll(reqs.Body)
+		w.Write([]byte(body))
+		// w.Header().Set("Content-Type", "application/json")
+		// w.Write(jsondata)
 		InfoLogger.Printf("%s request, result: %t\n", r.Method, res)
 		data := make(map[string]string)
 		data["ip"] = r.RemoteAddr
@@ -126,7 +137,7 @@ func main() {
 	httpHost, httpPort := "0.0.0.0", os.Getenv("PORT")
 	log.Printf("bank_card_validator-api starts on %s:%s", httpHost, httpPort)
 	mux.HandleFunc("/", web)
-	mux.HandleFunc("/check_number", get_info)
+	mux.HandleFunc("/check_number", webHandler)
 	err := http.ListenAndServe((httpHost + ":" + httpPort), mux)
 	if err != nil {
 		ErrorLogger.Println(err)

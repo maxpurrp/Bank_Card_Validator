@@ -10,7 +10,7 @@ services:
     command: ["go", "run", "api/main.go"]
     environment:
       - PORT=3333
-      - PATH_LOG=YOUR INFORMATION
+      - PATH_LOG=../logs.log
     volumes:
       - myapp:/home/
     networks:
@@ -30,7 +30,7 @@ services:
       - myapp:/home/
     environment:
       - PORT=3334
-      - PATH_LOG=YOUR INFORMATION
+      - PATH_LOG=../logs.log
     networks:
       - mynet
     depends_on:
@@ -47,10 +47,10 @@ services:
       - myapp:/home/
     environment:
       - PORT=3335
-      - POSTGRES_USER=YOUR INFORMATION
-      - POSTGRES_PASSWORD=YOUR INFORMATION
-      - POSTGRES_DB=YOUR INFORMATION
-      - PATH_LOG=YOUR INFORMATION
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=user
+      - PATH_LOG=../logs.log
     networks:
       - mynet
     depends_on:
@@ -71,9 +71,9 @@ services:
   postgres:
     image: postgres:alpine
     environment:
-      POSTGRES_USER: YOUR INFORMATION
-      POSTGRES_PASSWORD: YOUR INFORMATION
-      POSTGRES_DB: YOUR INFORMATION
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: user
     ports:
       - "5432:5432"
     networks:

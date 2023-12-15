@@ -29,7 +29,7 @@ func init() {
 	ErrorLogger = log.New(logFile, "ERROR: ", log.LstdFlags|log.Lshortfile|log.Lmicroseconds)
 }
 
-func saving(data map[string]string) {
+func save_to_db(data map[string]string) {
 	DB, err := sql.Open("postgres", conURL)
 	if err != nil {
 		ErrorLogger.Println(err)
@@ -50,12 +50,12 @@ func saving(data map[string]string) {
 		if errs != nil {
 			ErrorLogger.Println(err)
 		}
-		DebugLogger.Println("Saving in database successfully")
+		InfoLogger.Println("Saving in database successfully")
 
 	}
 }
 
-func get_data(w http.ResponseWriter, r *http.Request) {
+func savingHandler(w http.ResponseWriter, r *http.Request) {
 	b, err := io.ReadAll(r.Body)
 	if err != nil {
 		ErrorLogger.Println(err)
@@ -66,14 +66,14 @@ func get_data(w http.ResponseWriter, r *http.Request) {
 		ErrorLogger.Println(err)
 	}
 	DebugLogger.Printf("request from %s, args: %s", r.RemoteAddr, m)
-	saving(m)
+	save_to_db(m)
 }
 
 func main() {
 	mux := http.NewServeMux()
 	httpHost, httpPort := "0.0.0.0", os.Getenv("PORT")
 	log.Printf("bank_card_validator-database starts on %s:%s", httpHost, httpPort)
-	mux.HandleFunc("/saving", get_data)
+	mux.HandleFunc("/saving", savingHandler)
 	err := http.ListenAndServe((httpHost + ":" + httpPort), mux)
 	if err != nil {
 		ErrorLogger.Println(err)
