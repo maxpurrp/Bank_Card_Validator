@@ -40,6 +40,6 @@ func AlgLynh(number string) (bool, string) {
 	if res {
 		return true, "Valid success"
 	} else {
-		return false, "Wrong card number"
+		return false, "The bank card number is invalid"
 	}
 }

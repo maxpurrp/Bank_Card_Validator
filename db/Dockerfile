@@ -6,4 +6,4 @@ COPY . .
 
 RUN go mod download
 
-EXPOSE 3333
+EXPOSE 3335

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"io"
 	"log"
@@ -12,6 +13,15 @@ import (
 type Validation struct {
 	Valid  bool   `json:"valid"`
 	Errors string `json:"errors"`
+}
+
+type RequestBodyWeb struct {
+	Err string `json:"err"`
+}
+
+type RequestBodyDB struct {
+	Ip          string `json:"ip"`
+	Bank_number string `json:"bank_number"`
 }
 
 var (
@@ -30,47 +40,64 @@ func init() {
 	ErrorLogger = log.New(logFile, "ERROR: ", log.LstdFlags|log.Lshortfile|log.Lmicroseconds)
 }
 
+func check(err error) {
+	if err != nil {
+		ErrorLogger.Println(err)
+	}
+}
+
+func send_resp(res bool, err string) []byte {
+	var url string
+	switch {
+	case res:
+		url = "http://web:3336/success"
+	default:
+		url = "http://web:3336/failed"
+	}
+	data := RequestBodyWeb{Err: err}
+	body, er := json.Marshal(data)
+	check(er)
+	resp, errs := http.Post(url, "application/json", bytes.NewBuffer(body))
+	check(errs)
+	defer resp.Body.Close()
+	body, ers := io.ReadAll(resp.Body)
+	check(ers)
+	return body
+}
+
 func handler(w http.ResponseWriter, r *http.Request) {
-	b, err := io.ReadAll(r.Body)
-	if err != nil {
-		ErrorLogger.Println(err)
-	}
-	m := make(map[string]string)
-	err = json.Unmarshal(b, &m)
-	if err != nil {
-		ErrorLogger.Println(err)
-	}
-	DebugLogger.Printf("%s request from %s, args: %s", r.Method, r.RemoteAddr, m)
-	if len(m["number"]) < 16 {
-		resp := Validation{Valid: false, Errors: "Bad card number"}
-		jsondata, err := json.Marshal(resp)
-		if err != nil {
-			ErrorLogger.Println(err)
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsondata)
+	var resp []byte
+	param := r.URL.Query().Get("bank_number")
+	DebugLogger.Printf("%s request from %s, args: %s", r.Method, r.RemoteAddr, param)
+	if len(param) < 16 {
+		resp = send_resp(false, "The number of characters in the bank card must be 16")
 		InfoLogger.Printf("%s request, result: %t\n", r.Method, false)
 	} else {
-		res, er := lynh.AlgLynh(m["number"])
-		resp := Validation{Valid: res, Errors: er}
-		jsondata, err := json.Marshal(resp)
-		if err != nil {
-			ErrorLogger.Println(err)
+		res, err := lynh.AlgLynh(param)
+		InfoLogger.Printf("%s request, result: %t\n", r.Method, res)
+		if res {
+			resp = send_resp(res, err)
+			url := "http://db:3335/saving"
+			data := RequestBodyDB{Ip: r.RemoteAddr,
+				Bank_number: param}
+			reqBody, err := json.Marshal(data)
+			check(err)
+
+			_, err = http.Post(url, "application/json", bytes.NewBuffer(reqBody))
+			check(err)
+		} else {
+			resp = send_resp(res, err)
 		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(jsondata)
 		InfoLogger.Printf("%s request, result: %t\n", r.Method, res)
 	}
+	w.Write(resp)
 }
 
 func main() {
 	mux := http.NewServeMux()
-	httpHost, httpPort := "0.0.0.0", os.Getenv("PORT")
-	log.Printf("bank_card_validator-validator starts on %s:%s", httpHost, httpPort)
+	httpPort := os.Getenv("PORT")
+	log.Printf("the validation service is running")
 	mux.HandleFunc("/validation", handler)
-	err := http.ListenAndServe((httpHost + ":" + httpPort), mux)
-	if err != nil {
-		ErrorLogger.Println(err)
-	}
-
+	err := http.ListenAndServe((":" + httpPort), mux)
+	check(err)
 }

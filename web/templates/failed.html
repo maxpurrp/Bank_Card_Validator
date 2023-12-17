@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <cover>
+        <head>
+            <meta charset="UTF-8">
+            <title>Bank Card Validation</title><br>
+        </head>
+        <style>
+            html {
+                background-image: url('https://images.wallpaperscraft.ru/image/single/zatmenie_luna_svet_120001_1280x720.jpg');
+                background-repeat: no-repeat;
+                background-size: cover;
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+            <body>
+                <center><H2 style="color: rgb(206, 35, 35);">Validation failed</H2></center>
+                <center><H2 style="color: rgb(235, 235, 235);">{{.Error}}</H2></center>
+                <form action="/web" method="get">
+                    <center><button type="submit">Return in menu</button></center>
+                </form>
+            </body>
+    </cover>
+</html>
