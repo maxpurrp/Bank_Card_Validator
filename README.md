@@ -19,7 +19,8 @@
 
 1. ```git clone https://github.com/maxpurrp/Bank_Card_Validator```
 2. ```cd .\Bank_Card_Validator\```
-3. ```docker-compose up -d```
+3. Измените в ```docker-compose.yml``` переменные окружения
+4. ```docker-compose up -d```
 
 ## Использование
 
